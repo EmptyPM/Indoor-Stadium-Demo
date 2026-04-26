@@ -36,6 +36,9 @@ jobs:
           JWT_SECRET: ci-jwt-secret
           JWT_REFRESH_SECRET: ci-refresh-secret
 
+      - name: Generate Prisma client
+        run: npm run prisma:generate --workspace=apps/backend
+
       - name: Build all apps
         run: npm run build
 
