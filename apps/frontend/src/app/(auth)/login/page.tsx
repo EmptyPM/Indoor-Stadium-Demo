@@ -135,26 +135,7 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              {/* Demo box — click to fill */}
-              <div className="mt-5 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Demo Credentials — click to fill</p>
-                <div className="space-y-1.5">
-                  <button
-                    type="button"
-                    onClick={() => fillDemo('admin@indoorbook.com')}
-                    className="w-full text-left text-xs text-gray-600 p-2 hover:bg-white hover:border hover:border-gray-200 rounded-lg transition-all"
-                  >
-                    🛡️ <strong>Admin:</strong> <span className="font-mono">admin@indoorbook.com</span> / <span className="font-mono">Admin@123!</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fillDemo('user@indoorbook.com')}
-                    className="w-full text-left text-xs text-gray-600 p-2 hover:bg-white hover:border hover:border-gray-200 rounded-lg transition-all"
-                  >
-                    👤 <strong>User:</strong> <span className="font-mono">user@indoorbook.com</span> / <span className="font-mono">Admin@123!</span>
-                  </button>
-                </div>
-              </div>
+
             </CardContent>
           </Card>
         </div>
