@@ -9,7 +9,7 @@ WORKDIR /app
 # ─── Stage 1: Dependencies ───────────────
 FROM base AS deps
 COPY apps/frontend/package*.json ./
-RUN npm ci
+RUN npm install
 
 # ─── Stage 2: Build ──────────────────────
 FROM base AS builder
