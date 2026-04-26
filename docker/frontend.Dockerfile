@@ -25,6 +25,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/frontend/ .
+RUN mkdir -p public
 
 RUN npm run build
 
