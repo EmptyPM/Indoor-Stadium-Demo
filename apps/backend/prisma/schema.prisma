@@ -1,0 +1,193 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  MANAGER
+  USER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  phone        String?
+  role         Role      @default(USER)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  managedStadiums Stadium[] @relation("StadiumManagers")
+  bookings        Booking[]
+
+  @@map("users")
+}
+
+model Location {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  province  String?
+  isActive  Boolean   @default(true) @map("is_active")
+  stadiums  Stadium[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("locations")
+}
+
+model Sport {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  icon        String?  // emoji e.g. 🏸 🎾 🏏
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  courts      Court[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("sports")
+}
+
+model Stadium {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  address     String
+  images      String[] @default([])
+  phone       String?
+  email       String?
+  latitude    Float?
+  longitude   Float?
+  isActive    Boolean  @default(true) @map("is_active")
+
+  locationId String   @map("location_id")
+  location   Location @relation(fields: [locationId], references: [id])
+
+  managers  User[]   @relation("StadiumManagers")
+  courts    Court[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([name, locationId])
+  @@map("stadiums")
+}
+
+model Court {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  capacity    Int     @default(2)
+  isIndoor    Boolean @default(true) @map("is_indoor")
+  isActive    Boolean @default(true) @map("is_active")
+  imageUrl    String? @map("image_url")
+  openingTime String? @map("opening_time")   // e.g. "06:00"
+  closingTime String? @map("closing_time")   // e.g. "22:00"
+
+  stadiumId String  @map("stadium_id")
+  stadium   Stadium @relation(fields: [stadiumId], references: [id], onDelete: Cascade)
+
+  sportId String @map("sport_id")
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
+  bookings  Booking[]
+  pricings  Pricing[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name, stadiumId])
+  @@map("courts")
+}
+
+model Booking {
+  id           String        @id @default(uuid())
+  bookingDate  DateTime      @map("booking_date") @db.Date
+  startTime    String        @map("start_time")
+  endTime      String        @map("end_time")
+  totalHours   Float         @map("total_hours")
+  totalPrice   Float         @map("total_price")
+  status       BookingStatus @default(PENDING)
+  notes        String?
+  cancelledAt  DateTime?     @map("cancelled_at")
+  cancelReason String?       @map("cancel_reason")
+
+  courtId String @map("court_id")
+  court   Court  @relation(fields: [courtId], references: [id])
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  payment   Payment?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("bookings")
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  amount        Float
+  currency      String        @default("LKR")
+  status        PaymentStatus @default(PENDING)
+  method        String
+  transactionId String?       @unique @map("transaction_id")
+  notes         String?
+  paidAt        DateTime?     @map("paid_at")
+  refundedAt    DateTime?     @map("refunded_at")
+
+  bookingId String  @unique @map("booking_id")
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("payments")
+}
+
+model Pricing {
+  id           String  @id @default(uuid())
+  name         String
+  pricePerHour Float   @map("price_per_hour")
+  startTime    String  @map("start_time")
+  endTime      String  @map("end_time")
+  isWeekend    Boolean @default(false) @map("is_weekend")
+  dayOfWeek    Int[]   @default([]) @map("day_of_week")
+
+  courtId String @map("court_id")
+  court   Court  @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pricings")
+}

@@ -1,0 +1,84 @@
+version: '3.9'
+
+services:
+  # ─────────────────────────────────────────
+  # PostgreSQL Database
+  # ─────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: indoor_booking_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-indoor_booking}
+      POSTGRES_USER: ${POSTGRES_USER:-booking_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-booking_pass}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - indoor_network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-booking_user} -d ${POSTGRES_DB:-indoor_booking}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # NestJS Backend
+  # ─────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: indoor_booking_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-booking_user}:${POSTGRES_PASSWORD:-booking_pass}@db:5432/${POSTGRES_DB:-indoor_booking}
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_refresh_in_production}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
+      BACKEND_PORT: ${BACKEND_PORT:-4000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    ports:
+      - '4000:4000'
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - indoor_network
+    volumes:
+      - ./apps/backend/prisma:/app/prisma
+
+  # ─────────────────────────────────────────
+  # Next.js Frontend
+  # ─────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-IndoorBook}
+    container_name: indoor_booking_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-IndoorBook}
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+    networks:
+      - indoor_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  indoor_network:
+    driver: bridge
