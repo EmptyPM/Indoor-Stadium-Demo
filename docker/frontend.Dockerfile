@@ -9,7 +9,7 @@ WORKDIR /app
 # ─── Stage 1: Dependencies ───────────────
 FROM base AS deps
 COPY apps/frontend/package*.json ./
-RUN npm ci
+RUN npm install
 
 # ─── Stage 2: Build ──────────────────────
 FROM base AS builder
@@ -25,6 +25,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/frontend/ .
+RUN mkdir -p public
 
 RUN npm run build
 
@@ -38,8 +39,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy public assets and built output
-COPY --from=builder /app/public ./public
+# Copy built output (standalone + static). Keep public dir present even if source has no public folder.
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
