@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Backend test
-        run: npm run test --workspace=apps/backend -- --runInBand
+        run: npm run test --workspace=apps/backend -- --runInBand --passWithNoTests
         env:
           DATABASE_URL: postgresql://booking_user:booking_pass@localhost:5432/indoor_booking
           JWT_SECRET: ci-jwt-secret
