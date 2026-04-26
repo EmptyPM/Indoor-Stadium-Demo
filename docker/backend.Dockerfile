@@ -11,9 +11,9 @@ WORKDIR /app
 # ─── Stage 1: Dependencies ───────────────
 FROM base AS deps
 COPY apps/backend/package*.json ./
-RUN npm ci --only=production && \
+RUN npm install --omit=dev && \
     cp -R node_modules production_node_modules && \
-    npm ci
+    npm install
 
 # ─── Stage 2: Build ──────────────────────
 FROM base AS builder
