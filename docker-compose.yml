@@ -13,7 +13,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-booking_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-booking_pass}
     ports:
-      - '5432:5432'
+      - '${DB_HOST_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -29,6 +29,7 @@ services:
   # NestJS Backend
   # ─────────────────────────────────────────
   backend:
+    image: ${BACKEND_IMAGE:-indoor-booking-backend:local}
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
@@ -44,12 +45,13 @@ services:
       BACKEND_PORT: ${BACKEND_PORT:-4000}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
     ports:
-      - '4000:4000'
+      - '${BACKEND_HOST_PORT:-4000}:4000'
     depends_on:
       db:
         condition: service_healthy
     networks:
       - indoor_network
+      - npm_proxy_network
     volumes:
       - ./apps/backend/prisma:/app/prisma
 
@@ -57,6 +59,7 @@ services:
   # Next.js Frontend
   # ─────────────────────────────────────────
   frontend:
+    image: ${FRONTEND_IMAGE:-indoor-booking-frontend:local}
     build:
       context: .
       dockerfile: docker/frontend.Dockerfile
@@ -69,11 +72,12 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-IndoorBook}
     ports:
-      - '3000:3000'
+      - '${FRONTEND_HOST_PORT:-3000}:3000'
     depends_on:
       - backend
     networks:
       - indoor_network
+      - npm_proxy_network
 
 volumes:
   postgres_data:
@@ -82,3 +86,6 @@ volumes:
 networks:
   indoor_network:
     driver: bridge
+  npm_proxy_network:
+    external: true
+    name: ${NPM_EXTERNAL_NETWORK:-nginx-proxy-manager_npm-network}
