@@ -123,12 +123,9 @@ jobs:
             mkdir -p "${{ env.VPS_APP_DIR }}"
             cd "${{ env.VPS_APP_DIR }}"
 
-            if [ ! -d .git ]; then
-              git clone https://github.com/${{ github.repository }} .
-            else
-              git fetch origin main
-              git reset --hard origin/main
-            fi
+            git clone https://github.com/${{ github.repository }} . || true
+            git fetch origin main
+            git reset --hard origin/main
 
             cat > .env << EOF
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
