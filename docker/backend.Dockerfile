@@ -49,7 +49,7 @@ COPY apps/backend/prisma ./prisma
 COPY docker/backend-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 3001
+EXPOSE 4000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main.js"]
