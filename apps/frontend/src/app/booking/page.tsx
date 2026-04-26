@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { format, addDays } from 'date-fns';
 import { MapPin, Calendar, Clock, CheckCircle2, Loader2, ChevronRight } from 'lucide-react';
@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 
 const STEPS = ['Select Venue', 'Select Court', 'Date & Time', 'Confirm'];
 
-export default function BookingPage() {
+function BookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuthStore();
@@ -275,5 +275,17 @@ export default function BookingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    }>
+      <BookingContent />
+    </Suspense>
   );
 }

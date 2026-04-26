@@ -107,13 +107,9 @@ export class BookingsService {
 
   async findAll(
     query: {
-      page?: number;
-      limit?: number;
-      status?: BookingStatus;
-      courtId?: string;
-      userId?: string;
-      dateFrom?: string;
-      dateTo?: string;
+      page?: number; limit?: number; status?: BookingStatus;
+      courtId?: string; userId?: string; stadiumId?: string;
+      dateFrom?: string; dateTo?: string;
     },
     requesterId: string,
     requesterRole: Role,
@@ -124,7 +120,6 @@ export class BookingsService {
 
     const where: any = {};
 
-    // Non-admins can only see their own bookings
     if (requesterRole === Role.USER) {
       where.userId = requesterId;
     } else if (query.userId) {
@@ -133,6 +128,7 @@ export class BookingsService {
 
     if (query.status) where.status = query.status;
     if (query.courtId) where.courtId = query.courtId;
+    if (query.stadiumId) where.court = { stadiumId: query.stadiumId };
     if (query.dateFrom || query.dateTo) {
       where.bookingDate = {};
       if (query.dateFrom) where.bookingDate.gte = new Date(query.dateFrom);

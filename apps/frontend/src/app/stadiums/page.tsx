@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Loader2 } from 'lucide-react';
 import { useStadiums } from '@/hooks/use-stadiums';
-import { getSportEmoji } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,10 +11,9 @@ import { Badge } from '@/components/ui/badge';
 
 export default function StadiumsPage() {
   const [search, setSearch] = useState('');
-  const [city, setCity] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useStadiums({ page, limit: 9, search, city });
+  const { data, isLoading } = useStadiums({ page, limit: 9, search });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,15 +48,6 @@ export default function StadiumsPage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search stadiums..."
-              className="pl-9 bg-white"
-            />
-          </div>
-          <div className="relative w-full sm:w-48">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              value={city}
-              onChange={(e) => { setCity(e.target.value); setPage(1); }}
-              placeholder="City..."
               className="pl-9 bg-white"
             />
           </div>
@@ -100,9 +89,9 @@ export default function StadiumsPage() {
                           {stadium._count?.courts || 0} courts
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-500 flex items-center gap-1.5 mb-4">
+                        <p className="text-sm text-gray-500 flex items-center gap-1.5 mb-4">
                         <MapPin className="w-3.5 h-3.5" />
-                        {stadium.city}, {stadium.state}
+                        {stadium.location?.name ?? stadium.address ?? 'Indoor Venue'}
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-400">Indoor sports center</span>
@@ -116,13 +105,13 @@ export default function StadiumsPage() {
               ))}
             </div>
 
-            {data?.totalPages > 1 && (
+            {(data?.totalPages ?? 0) > 1 && (
               <div className="flex items-center justify-center gap-3 mt-10">
                 <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
                   Previous
                 </Button>
-                <span className="text-sm text-gray-400">Page {page} of {data.totalPages}</span>
-                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(data.totalPages, p + 1))} disabled={page === data.totalPages}>
+                <span className="text-sm text-gray-400">Page {page} of {data?.totalPages ?? 1}</span>
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(data?.totalPages ?? 1, p + 1))} disabled={page === (data?.totalPages ?? 1)}>
                   Next
                 </Button>
               </div>

@@ -1,6 +1,7 @@
-# 🏟️ IndoorBook – Indoor Sports Booking System
+# 🏟️ IndoorBook — Indoor Sports Court Booking System
 
-A production-ready **monorepo** for an Indoor Sports Court Booking System built with NestJS, Next.js, PostgreSQL, Prisma, and Docker.
+A full-stack web application for managing and booking indoor sports courts.  
+Admins manage stadiums, courts, users and payments. Users browse and book courts online.
 
 ---
 
@@ -9,334 +10,234 @@ A production-ready **monorepo** for an Indoor Sports Court Booking System built 
 ```
 indoor-booking-system/
 ├── apps/
-│   ├── backend/                  # NestJS API (port 3001)
-│   │   ├── prisma/
-│   │   │   ├── schema.prisma     # Database schema
-│   │   │   └── seed.ts           # Seed data
-│   │   └── src/
-│   │       ├── modules/
-│   │       │   ├── auth/         # JWT authentication
-│   │       │   ├── users/        # User management
-│   │       │   ├── stadiums/     # Venue management
-│   │       │   ├── courts/       # Court management + availability
-│   │       │   ├── bookings/     # Booking logic
-│   │       │   ├── payments/     # Payment tracking
-│   │       │   └── pricing/      # Dynamic pricing rules
-│   │       ├── common/
-│   │       │   ├── guards/       # JWT + Roles guards
-│   │       │   └── decorators/   # CurrentUser, Roles, Public
-│   │       ├── prisma/           # PrismaService
-│   │       ├── main.ts
-│   │       └── app.module.ts
-│   │
-│   └── frontend/                 # Next.js App Router (port 3000)
-│       └── src/
-│           ├── app/
-│           │   ├── page.tsx           # Landing page
-│           │   ├── (auth)/
-│           │   │   ├── login/         # Login page
-│           │   │   └── register/      # Register page
-│           │   ├── dashboard/         # User dashboard
-│           │   ├── stadiums/          # Venues listing
-│           │   ├── stadium/[id]/      # Venue detail
-│           │   ├── booking/           # Multi-step booking wizard
-│           │   └── admin/             # Admin panel
-│           ├── components/
-│           │   └── providers.tsx      # React Query provider
-│           ├── hooks/                 # React Query hooks
-│           ├── lib/
-│           │   ├── axios.ts           # Axios + JWT interceptors
-│           │   └── utils.ts           # Utilities
-│           └── store/
-│               └── auth.store.ts      # Zustand auth store
-│
+│   ├── backend/        ← NestJS API (port 4000)
+│   └── frontend/       ← Next.js website (port 3000)
 ├── packages/
-│   └── types/                    # Shared TypeScript types
-│
-├── docker/
-│   ├── backend.Dockerfile        # Multi-stage Node 20 build
-│   ├── frontend.Dockerfile       # Standalone Next.js build
-│   ├── backend-entrypoint.sh     # Runs migrations then starts server
-│   └── init.sql                  # PostgreSQL initialization
-│
-├── docker-compose.yml            # All services
-├── .env.example                  # Environment template
-└── README.md
+│   └── types/          ← Shared TypeScript types
+├── docker/             ← Docker config files
+└── docker-compose.yml  ← Runs everything with one command
 ```
 
 ---
 
-## 🚀 Quick Start with Docker
+## 🚀 Quick Start (Local Development)
 
-### 1. Clone and configure
+### 1. Requirements
 
-```bash
-git clone <repo-url>
-cd indoor-booking-system
-
-# Copy env file
-cp .env.example .env
-
-# Edit your secrets
-nano .env
-```
-
-### 2. Run everything
-
-```bash
-docker-compose up --build
-```
-
-| Service  | URL                             |
-|----------|---------------------------------|
-| Frontend | http://localhost:3000           |
-| Backend  | http://localhost:3001/api/v1    |
-| Swagger  | http://localhost:3001/api/docs  |
+Make sure you have these installed:
+- [Node.js](https://nodejs.org/) v18 or later
+- [PostgreSQL](https://www.postgresql.org/) running locally **OR** [Docker](https://www.docker.com/)
 
 ---
 
-## 💻 Local Development
-
-### Prerequisites
-
-- Node.js >= 20
-- npm >= 10
-- Docker (for PostgreSQL)
-
-### 1. Start PostgreSQL only
+### 2. Clone & Install
 
 ```bash
-docker-compose up db -d
-```
-
-### 2. Install dependencies
-
-```bash
+git clone https://github.com/EmptyPM/Indoor-Stadium-Demo.git
+cd Indoor-Stadium-Demo
 npm install
 ```
 
-### 3. Setup backend
+---
+
+### 3. Set Up Environment Variables
+
+**Backend** — copy and edit:
+```bash
+# File: apps/backend/.env
+DATABASE_URL=postgresql://booking_user:booking_pass@localhost:5432/indoor_booking
+JWT_SECRET=your-secret-key-here
+JWT_REFRESH_SECRET=your-refresh-secret-here
+BACKEND_PORT=4000
+NODE_ENV=development
+```
+
+**Frontend** — copy and edit:
+```bash
+# File: apps/frontend/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_APP_NAME=IndoorBook
+```
+
+---
+
+### 4. Start the Database
+
+**Option A — Docker (easiest):**
+```bash
+docker-compose up -d db
+```
+
+**Option B — Local PostgreSQL:**
+Create a database named `indoor_booking` with the credentials above.
+
+---
+
+### 5. Set Up the Database Schema
 
 ```bash
 cd apps/backend
-cp ../../.env.example .env
-# Update DATABASE_URL to point to localhost:5432
-
-# Generate Prisma client
-npm run prisma:generate
-
-# Run migrations
-npm run prisma:migrate
-
-# Seed database
-npm run prisma:seed
-
-# Start dev server
-npm run dev
+npx prisma db push       # creates all tables
+npx prisma db seed       # adds sample data (sports, locations, etc.)
 ```
 
-### 4. Setup frontend
+---
 
+### 6. Run the App
+
+Open **two terminals**:
+
+**Terminal 1 — Backend:**
+```bash
+cd apps/backend
+npm run dev
+# → Running at http://localhost:4000
+```
+
+**Terminal 2 — Frontend:**
 ```bash
 cd apps/frontend
-cp ../../.env.example .env.local
-# Set NEXT_PUBLIC_API_URL=http://localhost:3001
-
 npm run dev
+# → Running at http://localhost:3000
 ```
 
+Then open **http://localhost:3000** in your browser.
+
 ---
 
-## 🗄️ Database
-
-### Prisma Commands
+## 🐳 Run with Docker (All-in-One)
 
 ```bash
-# From apps/backend directory or workspace root
-
-# Generate Prisma client after schema changes
-npm run prisma:generate --workspace=apps/backend
-
-# Create a new migration
-npm run prisma:migrate --workspace=apps/backend
-
-# Deploy migrations (production)
-npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma
-
-# Open Prisma Studio (GUI)
-npm run prisma:studio --workspace=apps/backend
-
-# Seed database with sample data
-npm run prisma:seed --workspace=apps/backend
-```
-
-### Schema Models
-
-| Model   | Description                              |
-|---------|------------------------------------------|
-| User    | Accounts with roles (SUPER_ADMIN, MANAGER, USER) |
-| Stadium | Sports venues with manager assignment    |
-| Court   | Individual courts within stadiums        |
-| Booking | Reservations with time slots             |
-| Payment | Payment records linked to bookings       |
-| Pricing | Time-based pricing rules per court       |
-
----
-
-## 🔑 Authentication
-
-- **JWT Bearer tokens** (access + refresh)
-- **Role-based access control** (RBAC)
-- Roles: `SUPER_ADMIN`, `MANAGER`, `USER`
-
-### Demo Credentials (after seeding)
-
-| Role        | Email                      | Password    |
-|-------------|----------------------------|-------------|
-| Super Admin | admin@indoorbook.com       | Admin@123!  |
-| Manager     | manager@indoorbook.com     | Admin@123!  |
-| User        | user@indoorbook.com        | Admin@123!  |
-
----
-
-## 🌐 API Endpoints
-
-### Auth
-| Method | Path                    | Auth     | Description        |
-|--------|-------------------------|----------|--------------------|
-| POST   | /api/v1/auth/register   | Public   | Register user      |
-| POST   | /api/v1/auth/login      | Public   | Login              |
-| GET    | /api/v1/auth/me         | JWT      | Get profile        |
-| POST   | /api/v1/auth/refresh    | JWT      | Refresh token      |
-
-### Stadiums
-| Method | Path                    | Auth             | Description        |
-|--------|-------------------------|------------------|--------------------|
-| GET    | /api/v1/stadiums        | Public           | List stadiums      |
-| GET    | /api/v1/stadiums/:id    | Public           | Get stadium        |
-| POST   | /api/v1/stadiums        | MANAGER+         | Create stadium     |
-| PATCH  | /api/v1/stadiums/:id    | MANAGER+         | Update stadium     |
-| DELETE | /api/v1/stadiums/:id    | SUPER_ADMIN      | Delete stadium     |
-
-### Courts
-| Method | Path                              | Auth     | Description           |
-|--------|-----------------------------------|----------|-----------------------|
-| GET    | /api/v1/courts/stadium/:stadiumId | Public   | Courts by stadium     |
-| GET    | /api/v1/courts/:id                | Public   | Court details         |
-| GET    | /api/v1/courts/:id/availability   | Public   | Available time slots  |
-| POST   | /api/v1/courts                    | MANAGER+ | Create court          |
-
-### Bookings
-| Method | Path                     | Auth | Description          |
-|--------|--------------------------|------|----------------------|
-| GET    | /api/v1/bookings         | JWT  | List bookings        |
-| POST   | /api/v1/bookings         | JWT  | Create booking       |
-| GET    | /api/v1/bookings/:id     | JWT  | Get booking          |
-| PATCH  | /api/v1/bookings/:id/cancel | JWT | Cancel booking    |
-| PATCH  | /api/v1/bookings/:id/confirm | MANAGER+ | Confirm booking |
-
-### Payments
-| Method | Path                      | Auth     | Description     |
-|--------|---------------------------|----------|-----------------|
-| GET    | /api/v1/payments          | MANAGER+ | List payments   |
-| GET    | /api/v1/payments/stats    | MANAGER+ | Stats           |
-| PATCH  | /api/v1/payments/:id/pay  | MANAGER+ | Mark as paid    |
-| PATCH  | /api/v1/payments/:id/refund | SUPER_ADMIN | Refund     |
-
----
-
-## 🐳 Docker Commands
-
-```bash
-# Start all services
 docker-compose up --build
+```
 
-# Start in background
-docker-compose up -d --build
+This starts the database, backend, and frontend together.
 
-# View logs
-docker-compose logs -f
+---
 
-# View specific service logs
-docker-compose logs -f backend
+## 👤 Default Login
 
-# Stop all services
-docker-compose down
+After seeding the database:
 
-# Stop and remove volumes (CAUTION: deletes data)
-docker-compose down -v
+| Role | Email | Password |
+|------|-------|----------|
+| Super Admin | `admin@indoorbook.com` | `Admin@123` |
+| Manager | `manager@indoorbook.com` | `Manager@123` |
 
-# Rebuild specific service
-docker-compose up --build backend
+---
+
+## 📱 Pages & Features
+
+### 👥 User Side
+| Page | URL | Description |
+|------|-----|-------------|
+| Home | `/` | Landing page with venue search |
+| Browse Venues | `/stadiums` | List all stadiums |
+| Venue Detail | `/stadium/:id` | Courts & pricing |
+| Book a Court | `/booking` | Step-by-step booking flow |
+| My Bookings | `/dashboard` | View & cancel bookings |
+| Payment History | `/dashboard/payments` | All transactions |
+| My Profile | `/dashboard/profile` | Edit name, phone |
+
+### 🔧 Admin Side (`/admin`)
+| Section | Description |
+|---------|-------------|
+| Overview | Stats and recent bookings |
+| Users | Add/edit users, assign roles |
+| Stadiums | Add/edit stadiums, assign managers |
+| Courts | Add courts with sport, hours, pricing |
+| Bookings | View all bookings per stadium, confirm/cancel |
+| Payments | Full payment history, mark paid, refund |
+| Locations | Manage city/area locations |
+| Sports | Manage sport types with icons |
+| Settings | Payment methods, bank accounts, password |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 14, React, TypeScript, TailwindCSS |
+| Backend | NestJS, TypeScript |
+| Database | PostgreSQL |
+| ORM | Prisma |
+| Auth | JWT (access + refresh tokens) |
+| State | Zustand |
+| Data fetching | TanStack Query (React Query) |
+
+---
+
+## 🔑 User Roles
+
+| Role | What they can do |
+|------|-----------------|
+| `SUPER_ADMIN` | Full access — all stadiums, users, settings |
+| `MANAGER` | Manage assigned stadiums and their courts/bookings |
+| `USER` | Browse venues, book courts, view own history |
+
+---
+
+## 📡 API
+
+The backend API runs at `http://localhost:4000`
+
+**Swagger docs:** `http://localhost:4000/api`
+
+Key endpoints:
+```
+POST   /auth/login          → Login
+POST   /auth/register       → Register
+GET    /stadiums            → List stadiums
+GET    /courts              → List courts
+POST   /bookings            → Create booking
+GET    /bookings/my         → My bookings
+GET    /payments            → All payments (admin)
 ```
 
 ---
 
-## 🏗️ Tech Stack
+## 🗃️ Database
 
-### Backend
-- **NestJS** – Scalable Node.js framework
-- **Prisma** – Type-safe ORM
-- **PostgreSQL** – Relational database
-- **Passport.js + JWT** – Authentication
-- **class-validator** – Request validation
-- **Swagger** – API documentation
-
-### Frontend
-- **Next.js 14** – App Router
-- **TailwindCSS** – Utility-first CSS
-- **shadcn/ui** – Component library (Radix UI)
-- **React Query** – Server state management
-- **Zustand** – Client state management
-- **React Hook Form + Zod** – Form validation
-- **Axios** – HTTP client with interceptors
-
-### DevOps
-- **Docker + docker-compose** – Containerization
-- **Multi-stage Dockerfiles** – Optimized images
-- **PostgreSQL 15** – Production database
-
----
-
-## 🧩 Key Features
-
-- ✅ **Multi-step booking wizard** with real-time availability
-- ✅ **Role-based access control** (Super Admin / Manager / User)
-- ✅ **Dynamic pricing** based on time of day and weekends
-- ✅ **Conflict detection** – prevents double bookings
-- ✅ **JWT auth** with auto-refresh via interceptors
-- ✅ **Payment tracking** with paid/refund flow
-- ✅ **Prisma migrations** auto-run on container start
-- ✅ **Swagger API docs** in development mode
-- ✅ **Seed script** with demo data
-
----
-
-## 📝 Environment Variables
-
-See `.env.example` for the full list. Key variables:
-
-```env
-DATABASE_URL=postgresql://user:pass@db:5432/indoor_booking
-JWT_SECRET=your_very_long_secret_here
-JWT_EXPIRES_IN=7d
-NEXT_PUBLIC_API_URL=http://localhost:3001
+View and edit data visually:
+```bash
+cd apps/backend
+npx prisma studio
+# Opens at http://localhost:5555
 ```
 
-> ⚠️ Never commit `.env` to version control. Always use `.env.example` as template.
+Make schema changes:
+```bash
+# After editing apps/backend/prisma/schema.prisma
+npx prisma db push
+npx prisma generate
+```
+
+---
+
+## 📦 Build for Production
+
+```bash
+# Backend
+cd apps/backend
+npm run build
+
+# Frontend
+cd apps/frontend
+npm run build
+npm run start
+```
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit changes: `git commit -am 'Add feature'`
-4. Push to branch: `git push origin feature/my-feature`
+1. Create a new branch: `git checkout -b feature/your-feature`
+2. Make your changes
+3. Commit: `git commit -m "feat: describe your change"`
+4. Push: `git push origin feature/your-feature`
 5. Open a Pull Request
 
 ---
 
-## 📄 License
-
-MIT License © 2025 IndoorBook Team
+> Built with ❤️ for indoor sports communities.
